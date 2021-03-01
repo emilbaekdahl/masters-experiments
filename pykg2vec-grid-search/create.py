@@ -13,7 +13,7 @@ MODELS = [
     "KG2E",
     "Rescal",
     "DistMult",
-    "ComplEx",
+    "Complex",
     "SimplE",
     "TuckER",
     "ConvE",
@@ -35,6 +35,7 @@ CONFIG: Config = {
     "device": ["cuda"],
     "epochs": [500],
     "sampling": ["bern"],
+    "lambda": [0.001, 0.0001, 0.00001],
 }
 
 # Each key in a Config object corresponds to a pykg2vec CLI parameter.
@@ -53,6 +54,7 @@ TRANSLATE = {
     "sampling": "s",
     "device": "device",
     "epochs": "l",
+    "lambda": "lmda",
 }
 
 JOB_TEMPLATE = string.Template(
@@ -101,6 +103,10 @@ def create_configs(model: str, dataset: str) -> tp.List[Config]:
         config = {
             key: value for key, value in config.items() if key not in ["cmin", "cmax"]
         }
+
+    # Only DistMult, ComplEx, and Simple care about the lambda parameter.
+    if model not in ["DistMult", "Complex", "SimplE"]:
+        config = {key: value for key, value in config.items() if key != "lambda"}
 
     keys, values = zip(*sorted(config.items()))
     return [dict(zip(keys, value)) for value in it.product(*values)]
