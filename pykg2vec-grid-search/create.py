@@ -26,6 +26,7 @@ Config = tp.Dict[str, tp.Union[float, bool, str]]
 
 CONFIG: Config = {
     "hidden_size": [100, 500, 1_000],
+    "hidden_size_1": [20],
     "batch_size": [100, 1_000, 10_000],
     "learning_rate": [1e-6, 1e-3, 0.1],
     "margin": [0.1, 1, 10],
@@ -36,6 +37,10 @@ CONFIG: Config = {
     "epochs": [500],
     "sampling": ["bern"],
     "lambda": [0.001, 0.0001, 0.00001],
+    "input_dropout": [0.1, 0.2],
+    "feature_map_dropout": [0.1, 0.2],
+    "hidden_dropout": [0.1, 0.2],
+    "num_filters": [10, 50, 100],
 }
 
 # Each key in a Config object corresponds to a pykg2vec CLI parameter.
@@ -55,6 +60,11 @@ TRANSLATE = {
     "device": "device",
     "epochs": "l",
     "lambda": "lmda",
+    "hidden_size_1": "k2",
+    "input_dropout": "idt",
+    "feature_map_dropout": "fmd",
+    "hidden_dropout": "hdt",
+    "num_filters": "fnum",
 }
 
 JOB_TEMPLATE = string.Template(
@@ -107,6 +117,22 @@ def create_configs(model: str, dataset: str) -> tp.List[Config]:
     # Only DistMult, ComplEx, and Simple care about the lambda parameter.
     if model not in ["DistMult", "Complex", "SimplE"]:
         config = {key: value for key, value in config.items() if key != "lambda"}
+
+    if model != "ConvKB":
+        config = {key: value for key, value in config.items() if key != "num_filters"}
+
+    if model != "ConvE":
+        config = {
+            key: value
+            for key, value in config.items()
+            if key
+            not in [
+                "hidden_size_1",
+                "input_dropout",
+                "feature_map_dropout",
+                "hidden_dropout",
+            ]
+        }
 
     keys, values = zip(*sorted(config.items()))
     return [dict(zip(keys, value)) for value in it.product(*values)]
